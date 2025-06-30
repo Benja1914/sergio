@@ -17,12 +17,11 @@ export const MainLayout = ({ children }: Props) => {
       <Head>
         <title>{metadata.title}</title>
         <meta name="description" content={metadata.title} />
-        <link rel="icon" href="/crom/mf-host/favicon.ico" />
+        <link rel="icon" href="/assets/images/Logo.svg" />
       </Head>
-      <div className="h-full flex flex-col justify-between items-center">
+      <div className="h-screen flex flex-col justify-between items-center">
         <Header />
-        <main className="py-5 p-5 bg-[#030711] h-full w-full">{children}</main>
-        <Footer />
+        <main className="py-5 p-5 bg-[#030711] w-full flex-1 overflow-auto">{children}</main>        <Footer />
       </div>
     </React.Fragment>
   );

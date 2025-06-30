@@ -23,11 +23,10 @@ const Header: React.FC<HeaderProps> = ({
           <div className='flex items-center space-x-4 gap-8'>
             {/* Logo */}
             <img
-              src="/assets/images/logo.svg"
+              src="/assets/images/Logo.svg"
               alt="Logo"
-              width={82}
-              height={48}
-              className="h-auto"
+              width={150}
+              height={100}
             />
             {/* Search Bar */}
             <div className="flex-1 max-w-md mx-8">

@@ -1,20 +1,19 @@
 version: "3.8"
 
 services:
-  production_service:
-    container_name: ${NAME_APP}
-    build:
-      target: runner
-      context: .
-      args:
-        - PORT=${PORT}
+  mysql:
+    image: mysql:8.0
+    container_name: ychile_mysql
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password --skip-ssl
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ychile
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
     ports:
-      - "${PORT}:${PORT}"
-    deploy:
-      resources:
-        limits:
-          cpus: "1"
-          memory: "512m"
-        reservations:
-          cpus: "0.25"
-          memory: "256m"
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
