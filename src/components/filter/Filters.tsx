@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
-import { FiSearch } from 'react-icons/fi';
+import { FiSearch, FiChevronDown } from 'react-icons/fi';
 import { VscSettings } from "react-icons/vsc";
 import { AccordionItem, ActiveFilter, PlpFiltersProps } from './interfaces';
 import { Accordion } from '../Accordion/Accordion';
-
-
 
 export const PlpFilters = ({ filtersConfig, onFiltersChange, onSearch }: PlpFiltersProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
   const [accordionKey, setAccordionKey] = useState(0);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Estados para mobile
+  const [selectedFilterTag, setSelectedFilterTag] = useState('YCH');
+  const [selectedSortBy, setSelectedSortBy] = useState('Price');
 
   useEffect(() => {
     if (debounceRef.current) {
@@ -72,8 +74,6 @@ export const PlpFilters = ({ filtersConfig, onFiltersChange, onSearch }: PlpFilt
     onFiltersChange(updated);
   };
 
-
-
   const items: AccordionItem[] = filtersConfig.map(filter => ({
     id: filter.id,
     title: filter.title,
@@ -92,27 +92,75 @@ export const PlpFilters = ({ filtersConfig, onFiltersChange, onSearch }: PlpFilt
     onFiltersChange([]);
   }
 
+  // Opciones para los selectores mobile
+  const filterTagOptions = ['YCH', 'Commission', 'Adoptable', 'Other'];
+  const sortByOptions = ['Price', 'Date', 'Popularity', 'Ending Soon'];
+
   return (
-    <div className="text-white font-nunito">
-      <div className='flex pb-3 justify-between items-center'>
-        <label className='text-xl font-bold'>Filters</label>
-        <div className='flex gap-2 items-center cursor-pointer' onClick={resetFilters}>
-          <VscSettings />
-          <label className='text-sm cursor-pointer'>Reset</label>
+    <>
+      {/* Desktop Version */}
+      <div className="hidden md:block text-white font-nunito">
+        <div className='flex pb-3 justify-between items-center'>
+          <label className='text-xl font-bold'>Filters</label>
+          <div className='flex gap-2 items-center cursor-pointer' onClick={resetFilters}>
+            <VscSettings />
+            <label className='text-sm cursor-pointer'>Reset</label>
+          </div>
         </div>
-      </div>
-      <div className="flex items-center gap-1 p-2 border-[0.5px] border-stroke rounded-2xl h-8">
-        <FiSearch className="w-4 h-4" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          placeholder="Search by"
-          className="w-full bg-transparent focus:outline-none border-none" // <-- border-none agregado
-        />
+        <div className="flex items-center gap-1 p-2 border-[0.5px] border-stroke rounded-2xl h-8">
+          <FiSearch className="w-4 h-4" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search by"
+            className="w-full bg-transparent focus:outline-none border-none"
+          />
+        </div>
+
+        <Accordion key={accordionKey} items={items} />
       </div>
 
-      <Accordion key={accordionKey} items={items} />
-    </div>
+      {/* Mobile Version */}
+      <div className="md:hidden flex gap-4 px-4 py-3">
+        {/* Filter Tags Selector */}
+        <div className="flex-1">
+          <label className="block text-white text-sm font-medium mb-2">Filter Tags</label>
+          <div className="relative">
+            <select
+              value={selectedFilterTag}
+              onChange={(e) => setSelectedFilterTag(e.target.value)}
+              className="w-full bg-[#1a2332] text-white border border-gray-600 rounded-lg px-4 py-3 pr-10 appearance-none focus:outline-none focus:border-blue-500 transition-colors"
+            >
+              {filterTagOptions.map(option => (
+                <option key={option} value={option} className="bg-[#1a2332]">
+                  {option}
+                </option>
+              ))}
+            </select>
+            <FiChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+          </div>
+        </div>
+
+        {/* Sort By Selector */}
+        <div className="flex-1">
+          <label className="block text-white text-sm font-medium mb-2">Sort By</label>
+          <div className="relative">
+            <select
+              value={selectedSortBy}
+              onChange={(e) => setSelectedSortBy(e.target.value)}
+              className="w-full bg-[#1a2332] text-white border border-gray-600 rounded-lg px-4 py-3 pr-10 appearance-none focus:outline-none focus:border-blue-500 transition-colors"
+            >
+              {sortByOptions.map(option => (
+                <option key={option} value={option} className="bg-[#1a2332]">
+                  {option}
+                </option>
+              ))}
+            </select>
+            <FiChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

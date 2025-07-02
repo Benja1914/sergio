@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, Bell, MessageCircle } from 'lucide-react';
+import { HiPlus } from 'react-icons/hi';
 
 interface HeaderProps {
   onNewAuction?: () => void;
@@ -19,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header className="w-full bg-[#0e172c]">
       <div className="mx-auto px-6 py-3">
-        <div className="grid grid-cols-2">
+        <div className="flex justify-center items-center md:grid md:grid-cols-2">
           <div className='flex items-center space-x-4 gap-8'>
             {/* Logo */}
             <img
@@ -29,7 +30,7 @@ const Header: React.FC<HeaderProps> = ({
               height={100}
             />
             {/* Search Bar */}
-            <div className="flex-1 max-w-md mx-8">
+            <div className="hidden md:flex flex-1 max-w-md mx-8">
               <div className="relative">
                 <input
                   type="text"
@@ -48,13 +49,22 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* Right Section */}
           <div className="flex items-center justify-end px-4 gap-[20px]">
-            {/* New Auction Button */}
+            {/* New Auction Button - Desktop */}
             <button
               onClick={onNewAuction}
-              className="w-[200px] h-[45px] bg-[#20315D] rounded-full text-white flex justify-center items-center"
+              className="hidden md:flex w-[200px] h-[45px] bg-[#20315D] rounded-full text-white justify-center items-center"
             >
               <span className="text-lg mr-1">+</span>
               <span>New Auction</span>
+            </button>
+
+            {/* New Auction Button - Mobile (solo icono +) */}
+            <button
+              onClick={onNewAuction}
+              className="flex md:hidden w-[32px] h-[32px] bg-white text-[#0E172C] justify-center items-center"
+              style={{ borderRadius: '50%' }}
+            >
+              <HiPlus size={18} />
             </button>
 
             {/* Notification Bell */}
@@ -62,7 +72,7 @@ const Header: React.FC<HeaderProps> = ({
               onClick={onNotificationClick}
               className="p-2 text-gray-300 hover:text-white hover:bg-[#3A4B6C] rounded-full transition-colors duration-200"
             >
-              <Bell size={20} color='white' fill='white'/>
+              <Bell size={20} color='white' fill='white' />
             </button>
 
             {/* Message Icon */}
@@ -70,7 +80,7 @@ const Header: React.FC<HeaderProps> = ({
               onClick={onMessageClick}
               className="p-2 text-gray-300 hover:text-white hover:bg-[#3A4B6C] rounded-full transition-colors duration-200"
             >
-              <MessageCircle size={20} fill='white'/>
+              <MessageCircle size={20} fill='white' />
             </button>
 
             {/* User Avatar */}
