@@ -1,44 +1,144 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { PlpFilters } from "@/components/filter/Filters";
 import { filtersConfig } from "@/mock";
 import Card from "@/components/Card";
 import Paginator from "@/components/Paginator/Paginator";
+import { RootState, AppDispatch } from "@/store";
+import { fetchAuctions, FetchAuctionsParams } from "@/store/auction/thunk";
 
 const Auctions = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { auctions, filteredAuctions, isLoading, error } = useSelector((state: RootState) => state.auction);
+
   const [activeFilters, setActiveFilters] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-
-  // Estados para el paginador (simulados para maquetado)
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = 10; // Simular 10 páginas
   const itemsPerPage = 24;
 
-  // Simular datos para la página actual
-  const getCurrentPageData = () => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return Array.from({ length: itemsPerPage }).map((_, idx) => ({
-      id: startIndex + idx,
-      image: "/assets/images/image_test_card.png",
-      titulo: `Example Title Auction examp YCH ${startIndex + idx + 1}`,
-      subtitulo: "Artist Name Example",
-      sb: 180,
-      mb: 20,
-      isPromoted: (startIndex + idx) % 2 === 0,
-      time: "15 hours"
-    }));
+  // Debug: Log para ver qué estamos obteniendo
+  console.log('Auctions state:', { auctions, filteredAuctions, isLoading, error });
+
+  // Cargar subastas al montar el componente
+  useEffect(() => {
+    const params: FetchAuctionsParams = {
+      page: currentPage,
+      limit: itemsPerPage,
+      status: "closed",
+      artStyle: "anime"
+    };
+    
+    console.log('Dispatching fetchAuctions with params:', params);
+    const actionResult = dispatch(fetchAuctions(params));
+    console.log('Action result:', actionResult);
+  }, [dispatch, currentPage]);
+
+  // Mapear los datos de la API al formato que espera el componente Card
+  const mapAuctionToCardData = (auction: any) => {
+    console.log('Mapping auction:', auction);
+    
+    return {
+      id: auction.id,
+      image: auction.attachedImage || "/assets/images/image_test_card.png",
+      titulo: auction.title || "Sin título",
+      subtitulo: auction.username || "Usuario desconocido",
+      sb: parseFloat(auction.startingBidPrice) || 0,
+      mb: parseFloat(auction.minimumBidIncrement) || 0,
+      chip1: auction.safety || "safe",
+      chip2: auction.promotedTime ? true : false,
+      time: formatTimeRemaining(auction.auctionEndDate),
+      isPromoted: auction.promotedTime ? true : false
+    };
+  };
+
+  // Función para formatear el tiempo restante
+  const formatTimeRemaining = (endDate: string) => {
+    if (!endDate) return "Sin fecha";
+    
+    try {
+      const now = new Date();
+      const end = new Date(endDate);
+      const diffMs = end.getTime() - now.getTime();
+      
+      if (diffMs <= 0) {
+        return "Finalizada";
+      }
+      
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      
+      if (diffDays > 0) {
+        return `About ${diffDays} day${diffDays > 1 ? 's' : ''}`;
+      } else if (diffHours > 0) {
+        return `${diffHours} Hour${diffHours > 1 ? 's' : ''}`;
+      } else if (diffMinutes > 0) {
+        return `${diffMinutes} Minute${diffMinutes > 1 ? 's' : ''}`;
+      } else {
+        return "Less than 1 minute";
+      }
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return "Error en fecha";
+    }
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // Aquí después harás la llamada al servicio
-    console.log(`Cambiar a página: ${page}`);
-
-    // Scroll suave hacia arriba (opcional)
+    
+    const params: FetchAuctionsParams = {
+      page: page,
+      limit: itemsPerPage,
+      status: "closed",
+      artStyle: "anime"
+    };
+    
+    dispatch(fetchAuctions(params));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const currentData = getCurrentPageData();
-  const totalItems = totalPages * itemsPerPage; // Total simulado
+  // Verificar que filteredAuctions es un array
+  if (!Array.isArray(filteredAuctions)) {
+    console.error('filteredAuctions is not an array:', filteredAuctions);
+    return (
+      <div className="w-full h-full flex justify-center items-center py-14">
+        <div className="text-red-500 text-xl">Error: datos inválidos</div>
+      </div>
+    );
+  }
+
+  // Mapear datos de forma segura
+  let currentData = [];
+  try {
+    currentData = filteredAuctions.map(mapAuctionToCardData);
+    console.log('Mapped data:', currentData);
+  } catch (error) {
+    console.error('Error mapping data:', error);
+    return (
+      <div className="w-full h-full flex justify-center items-center py-14">
+        <div className="text-red-500 text-xl">Error mapeando datos</div>
+      </div>
+    );
+  }
+
+  const totalItems = auctions.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex justify-center items-center py-14">
+        <div className="text-white text-xl">Cargando subastas...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full h-full flex justify-center items-center py-14">
+        <div className="text-red-500 text-xl">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <React.Fragment>
@@ -78,39 +178,49 @@ const Auctions = () => {
           {/* Información de resultados */}
           <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
             <span className="text-gray-400 text-sm">
-              Mostrando {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} de {totalItems} resultados
+              Mostrando {currentData.length} de {totalItems} resultados
             </span>
             <span className="text-gray-400 text-sm">
-              Página {currentPage} de {totalPages}
+              Página {currentPage} de {totalPages || 1}
             </span>
           </div>
+
 
           {/* Grid de cards - Responsive */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 justify-items-center md:justify-items-stretch">
-            {currentData.map((item, idx) => (
-              <Card
-                key={item.id}
-                image={item.image}
-                titulo={item.titulo}
-                subtitulo={item.subtitulo}
-                sb={item.sb}
-                mb={item.mb}
-                isPromoted={item.isPromoted}
-                time={item.time}
-              />
-            ))}
+            {currentData.length > 0 ? (
+              currentData.map((item) => (
+                <Card
+                  key={item.id}
+                  image={item.image}
+                  titulo={item.titulo}
+                  subtitulo={item.subtitulo}
+                  sb={item.sb}
+                  mb={item.mb}
+                  isPromoted={item.isPromoted}
+                  time={item.time}
+                  safety={item.chip1}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center text-gray-400 py-8">
+                No se encontraron subastas
+              </div>
+            )}
           </div>
 
           {/* Paginador */}
-          <div className="flex justify-center">
-            <Paginator
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-              showPages={5}
-              className="mb-8"
-            />
-          </div>
+          {totalPages > 1 && (
+            <div className="flex justify-center">
+              <Paginator
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                showPages={5}
+                className="mb-8"
+              />
+            </div>
+          )}
         </div>
       </div>
     </React.Fragment>

@@ -89,4 +89,36 @@ export class ApiUtils {
       throw new Error("Error sending delete request");
     }
   }
+  static async put<T = any>(
+  url: string,
+  data: any,
+  headers?: Record<string, any>
+): Promise<T> {
+  try {
+    const token = getToken();
+    const headersWithAuth = { ...headers, token: token };
+    
+    // Perform PUT request with axios
+    const response: AxiosResponse<T> = await axios.put<T>(url, data, {
+      headers: headersWithAuth,
+    });
+
+    return response.data;
+  } catch (error) {
+    const axiosError = error as AxiosError;
+
+    if (axiosError.response) {
+      console.error(
+        `Error updating data: ${axiosError.response.status} - ${axiosError.response.statusText}`
+      );
+    } else if (axiosError.request) {
+      console.error("Error updating data: No response received");
+    } else {
+      console.error(`Error creating request: ${axiosError.message}`);
+    }
+
+    // Throw a specific Error class based on the kind of error.
+    throw new Error("Error sending update request");
+  }
+}
 }
