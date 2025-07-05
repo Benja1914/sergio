@@ -4,10 +4,14 @@ import { VscSettings } from "react-icons/vsc";
 import { AccordionItem, ActiveFilter, PlpFiltersProps } from './interfaces';
 import { Accordion } from '../Accordion/Accordion';
 
-export const PlpFilters = ({ filtersConfig, onFiltersChange, onSearch }: PlpFiltersProps) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
-  const [accordionKey, setAccordionKey] = useState(0);
+export const PlpFilters = ({ 
+  filtersConfig, 
+  onFiltersChange, 
+  onSearch, 
+  activeFilters = [], 
+  searchQuery = '' 
+}: PlpFiltersProps) => {
+  const [internalSearchQuery, setInternalSearchQuery] = useState(searchQuery);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   
   // Estados para mobile
@@ -19,23 +23,23 @@ export const PlpFilters = ({ filtersConfig, onFiltersChange, onSearch }: PlpFilt
       clearTimeout(debounceRef.current);
     }
 
-    if (searchQuery.length === 0) {
+    if (internalSearchQuery.length === 0) {
       onSearch('');
       return;
     }
 
-    if (searchQuery.length < 3) {
+    if (internalSearchQuery.length < 3) {
       return;
     }
 
     debounceRef.current = setTimeout(() => {
-      onSearch(searchQuery.trim());
+      onSearch(internalSearchQuery.trim());
     }, 1000);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [searchQuery, onSearch]);
+  }, [internalSearchQuery, onSearch]);
 
   interface HandleOptionChangeItem {
     label: string;
@@ -70,7 +74,6 @@ export const PlpFilters = ({ filtersConfig, onFiltersChange, onSearch }: PlpFilt
       );
     }
 
-    setActiveFilters(updated);
     onFiltersChange(updated);
   };
 
@@ -81,14 +84,14 @@ export const PlpFilters = ({ filtersConfig, onFiltersChange, onSearch }: PlpFilt
     options: filter.options.map(opt => ({
       id: opt.id,
       label: opt.label,
+      checked: activeFilters.some(f => f.filterCategory === filter.id && f.labelId === opt.id),
       onChange: (id: string, checked: boolean) => handleOptionChange(filter.id, id, checked)
     }))
   }));
 
   const resetFilters = () => {
-    setActiveFilters([]);
-    setSearchQuery('');
-    setAccordionKey(key => key + 1);
+    setInternalSearchQuery('');
+    onSearch('');
     onFiltersChange([]);
   }
 
@@ -111,14 +114,14 @@ export const PlpFilters = ({ filtersConfig, onFiltersChange, onSearch }: PlpFilt
           <FiSearch className="w-4 h-4" />
           <input
             type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            value={internalSearchQuery}
+            onChange={e => setInternalSearchQuery(e.target.value)}
             placeholder="Search by"
             className="w-full bg-transparent focus:outline-none border-none"
           />
         </div>
 
-        <Accordion key={accordionKey} items={items} />
+        <Accordion items={items} />
       </div>
 
       {/* Mobile Version */}

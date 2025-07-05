@@ -19,19 +19,38 @@ const Auctions = () => {
   // Debug: Log para ver qué estamos obteniendo
   console.log('Auctions state:', { auctions, filteredAuctions, isLoading, error });
 
-  // Cargar subastas al montar el componente
+  // Resetear página cuando cambien filtros o búsqueda
+  useEffect(() => {
+    if (search || activeFilters.length > 0) {
+      setCurrentPage(1);
+    }
+  }, [search, activeFilters]);
+
+  // Cargar subastas al montar el componente y cuando cambien los filtros
   useEffect(() => {
     const params: FetchAuctionsParams = {
       page: currentPage,
-      limit: itemsPerPage,
-      status: "closed",
-      artStyle: "anime"
+      limit: itemsPerPage
     };
+    
+    // Agregar búsqueda si existe
+    if (search) {
+      params.search = search;
+    }
+    
+    // Agregar filtros si existen
+    if (activeFilters.length > 0) {
+      params.filters = {
+        safetyLevel: activeFilters.filter(f => f.filterCategory === 'safetyLevel').map(f => f.labelId),
+        species: activeFilters.filter(f => f.filterCategory === 'species').map(f => f.labelId),
+        deliveryDueDays: activeFilters.filter(f => f.filterCategory === 'deliveryDueDays').map(f => parseInt(f.labelId))
+      };
+    }
     
     console.log('Dispatching fetchAuctions with params:', params);
     const actionResult = dispatch(fetchAuctions(params));
     console.log('Action result:', actionResult);
-  }, [dispatch, currentPage]);
+  }, [dispatch, currentPage, search, activeFilters]);
 
   // Mapear los datos de la API al formato que espera el componente Card
   const mapAuctionToCardData = (auction: any) => {
@@ -88,9 +107,7 @@ const Auctions = () => {
     
     const params: FetchAuctionsParams = {
       page: page,
-      limit: itemsPerPage,
-      status: "closed",
-      artStyle: "anime"
+      limit: itemsPerPage
     };
     
     dispatch(fetchAuctions(params));
@@ -149,6 +166,8 @@ const Auctions = () => {
             filtersConfig={filtersConfig}
             onFiltersChange={setActiveFilters}
             onSearch={setSearch}
+            activeFilters={activeFilters}
+            searchQuery={search}
           />
         </div>
 
@@ -172,6 +191,8 @@ const Auctions = () => {
               filtersConfig={filtersConfig}
               onFiltersChange={setActiveFilters}
               onSearch={setSearch}
+              activeFilters={activeFilters}
+              searchQuery={search}
             />
           </div>
 

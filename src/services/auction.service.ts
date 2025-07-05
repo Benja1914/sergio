@@ -9,6 +9,12 @@ export interface GetAuctionsParams {
   page?: number;
   limit?: number;
   artStyle?: "anime" | "realistic" | "cartoon" | "abstract";
+  search?: string;
+  filters?: {
+    safetyLevel?: string[];
+    species?: string[];
+    deliveryDueDays?: number[];
+  };
 }
 
 export class AuctionService {
@@ -22,9 +28,22 @@ export class AuctionService {
     if (params?.page) queryParams.append('page', params.page.toString());
     if (params?.limit) queryParams.append('limit', params.limit.toString());
     if (params?.artStyle) queryParams.append('artStyle', params.artStyle);
+    if (params?.search) queryParams.append('search', params.search);
+    
+    // Agregar filtros
+    if (params?.filters) {
+      if (params.filters.safetyLevel?.length) {
+        queryParams.append('filters[safetyLevel]', params.filters.safetyLevel.join(','));
+      }
+      if (params.filters.species?.length) {
+        queryParams.append('filters[species]', params.filters.species.join(','));
+      }
+      if (params.filters.deliveryDueDays?.length) {
+        queryParams.append('filters[deliveryDueDays]', params.filters.deliveryDueDays.join(','));
+      }
+    }
     
     const finalUrl = queryParams.toString() ? `${url}?${queryParams.toString()}` : url;
-    //const finalUrl =  url;
     
     try {
       const response = await ApiUtils.get<AuctionResponse>(finalUrl);

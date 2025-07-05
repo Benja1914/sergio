@@ -8,6 +8,12 @@ export interface FetchAuctionsParams {
   page?: number;
   limit?: number;
   artStyle?: "anime" | "realistic" | "cartoon" | "abstract";
+  search?: string;
+  filters?: {
+    safetyLevel?: string[];
+    species?: string[];
+    deliveryDueDays?: number[];
+  };
 }
 
 // Usar createAsyncThunk en lugar de thunk manual

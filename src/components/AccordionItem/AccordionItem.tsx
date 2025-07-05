@@ -28,7 +28,7 @@ export const AccordionItem = ({ id, title, options, cols = 2 }: AccordionItemPro
       </button>
       {isOpen && (
         <div className={gridClass}>
-          {options.map(({ id: optId, label, onChange }) => (
+          {options.map(({ id: optId, label, checked, onChange }) => (
             <label
               key={optId}
               htmlFor={`${id}-${optId}`}
@@ -37,7 +37,12 @@ export const AccordionItem = ({ id, title, options, cols = 2 }: AccordionItemPro
               <input
                 id={`${id}-${optId}`}
                 type="checkbox"
-                onChange={e => onChange(optId, e.target.checked)}
+                checked={checked}
+                onChange={e => {
+                  e.stopPropagation();
+                  onChange(optId, e.target.checked);
+                }}
+                onClick={e => e.stopPropagation()}
                 className="
                   h-4 w-4
                   border border-white

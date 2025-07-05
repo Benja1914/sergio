@@ -14,6 +14,8 @@ export interface PlpFiltersProps {
   filtersConfig: FilterConfig[];
   onFiltersChange: (filters: ActiveFilter[]) => void;
   onSearch: (query: string) => void;
+  activeFilters?: ActiveFilter[];
+  searchQuery?: string;
 }
 
 export interface ActiveFilter {
@@ -25,6 +27,7 @@ export interface ActiveFilter {
 export interface AccordionOption {
   id: string;
   label: string;
+  checked: boolean;
   onChange: (id: string, checked: boolean) => void;
 }
 
