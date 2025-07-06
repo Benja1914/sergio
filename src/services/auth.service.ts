@@ -7,7 +7,23 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface SignupRequest {
+  email: string;
+  username: string;
+  password: string;
+}
+
 export interface LoginResponse {
+  token: string;
+  user: {
+    id: string;
+    email: string;
+    name?: string;
+    avatar?: string;
+  };
+}
+
+export interface SignupResponse {
   token: string;
   user: {
     id: string;
@@ -23,6 +39,26 @@ export class AuthService {
     
     try {
       const response = await ApiUtils.post<LoginResponse>(url, credentials, {
+        "Content-Type": "application/json",
+      });
+      
+      // Guardar token en localStorage
+      if (response.token) {
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+      }
+      
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async signup(credentials: SignupRequest): Promise<SignupResponse> {
+    const url = `${API_URL}/auth/register`;
+    
+    try {
+      const response = await ApiUtils.post<SignupResponse>(url, credentials, {
         "Content-Type": "application/json",
       });
       

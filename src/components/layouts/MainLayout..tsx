@@ -4,6 +4,7 @@ import Footer from "../footer/Footer";
 import Header from "../header/Header";
 import Modal from "../Modal/Modal";
 import LoginComponent from "../Login/Login";
+import SignupComponent from "../SignUp/SignUp";
 import { AuthService } from "@/services/auth.service";
 export const metadata = {
   title: "YCH",
@@ -16,6 +17,7 @@ interface Props {
 
 export const MainLayout = ({ children }: Props) => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   
@@ -49,12 +51,21 @@ export const MainLayout = ({ children }: Props) => {
   };
 
   const handleRegister = () => {
-    // TODO: Implement register modal
-    console.log('Register clicked');
+    setIsSignupModalOpen(true);
+  };
+
+  const handleSignupSuccess = (userData: any) => {
+    setIsLoggedIn(true);
+    setUser(userData);
+    setIsSignupModalOpen(false);
   };
 
   const closeLoginModal = () => {
     setIsLoginModalOpen(false);
+  };
+
+  const closeSignupModal = () => {
+    setIsSignupModalOpen(false);
   };
 
   return (
@@ -80,6 +91,14 @@ export const MainLayout = ({ children }: Props) => {
           <LoginComponent 
             onLoginSuccess={handleLoginSuccess}
             onClose={closeLoginModal}
+          />
+        </Modal>
+
+        {/* Signup Modal */}
+        <Modal isOpen={isSignupModalOpen} onClose={closeSignupModal}>
+          <SignupComponent 
+            onSignupSuccess={handleSignupSuccess}
+            onClose={closeSignupModal}
           />
         </Modal>
       </div>
