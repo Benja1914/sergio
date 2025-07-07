@@ -14,15 +14,20 @@ export interface SignupRequest {
 }
 
 export interface LoginResponse {
-  token: string;
-  user: {
-    id: string;
-    email: string;
-    name?: string;
-    avatar?: string;
-  };
+  accessToken: string;
+  createdAt: Date;
+  description: string;
+  deviantArt: any;
+  email: string;
+  emailStatus: string;
+  id: string;
+  status:string;
+  type:string
+  updatedAt: Date;
+  userBanner: string;
+  userImage: string;
+  username: string;
 }
-
 export interface SignupResponse {
   token: string;
   user: {
@@ -34,21 +39,46 @@ export interface SignupResponse {
 }
 
 export class AuthService {
+  setCookie(name: string, value: string, days = 7) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+  }
+
+  getCookie(name: string): string | null {
+    return document.cookie.split('; ').reduce((r, v) => {
+      const parts = v.split('=');
+      return parts[0] === name ? decodeURIComponent(parts[1]) : r
+    }, null as string | null);
+  }
+
+  deleteCookie(name: string) {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  }
+
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const url = `${API_URL}/auth/login`;
-    
+
     try {
-      const response = await ApiUtils.post<LoginResponse>(url, credentials, {
+      const response = await ApiUtils.post<any>(url, credentials, {
         "Content-Type": "application/json",
       });
-      
-      // Guardar token en localStorage
-      if (response.token) {
-        localStorage.setItem('authToken', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
+      console.log('response', response);
+
+      // Accede a response.data
+      const data = response.data;
+
+      if (data && data.accessToken) {
+        this.setCookie('authToken', data.accessToken);
+        this.setCookie('user', JSON.stringify({
+          id: data.id,
+          email: data.email,
+          username: data.username,
+          userImage: data.userImage,
+          userBanner: data.userBanner,
+        }));
       }
-      
-      return response;
+
+      return data;
     } catch (error) {
       throw error;
     }
@@ -56,18 +86,18 @@ export class AuthService {
 
   async signup(credentials: SignupRequest): Promise<SignupResponse> {
     const url = `${API_URL}/auth/register`;
-    
+
     try {
       const response = await ApiUtils.post<SignupResponse>(url, credentials, {
         "Content-Type": "application/json",
       });
-      
-      // Guardar token en localStorage
+
+      // Guardar token y usuario en cookies
       if (response.token) {
-        localStorage.setItem('authToken', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
+        this.setCookie('authToken', response.token);
+        this.setCookie('user', JSON.stringify(response.user));
       }
-      
+
       return response;
     } catch (error) {
       throw error;
@@ -76,8 +106,8 @@ export class AuthService {
 
   async logout(): Promise<void> {
     try {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
+      this.deleteCookie('authToken');
+      this.deleteCookie('user');
     } catch (error) {
       throw error;
     }
@@ -85,14 +115,14 @@ export class AuthService {
 
   getToken(): string | null {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('authToken');
+      return this.getCookie('authToken');
     }
     return null;
   }
 
   getUser(): any | null {
     if (typeof window !== 'undefined') {
-      const user = localStorage.getItem('user');
+      const user = this.getCookie('user');
       return user ? JSON.parse(user) : null;
     }
     return null;

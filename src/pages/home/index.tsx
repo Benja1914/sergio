@@ -17,7 +17,6 @@ const Auctions = () => {
   const itemsPerPage = 24;
 
   // Debug: Log para ver qué estamos obteniendo
-  console.log('Auctions state:', { auctions, filteredAuctions, isLoading, error });
 
   // Resetear página cuando cambien filtros o búsqueda
   useEffect(() => {
@@ -47,14 +46,11 @@ const Auctions = () => {
       };
     }
     
-    console.log('Dispatching fetchAuctions with params:', params);
     const actionResult = dispatch(fetchAuctions(params));
-    console.log('Action result:', actionResult);
   }, [dispatch, currentPage, search, activeFilters]);
 
   // Mapear los datos de la API al formato que espera el componente Card
   const mapAuctionToCardData = (auction: any) => {
-    console.log('Mapping auction:', auction);
     
     return {
       id: auction.id,
@@ -128,7 +124,6 @@ const Auctions = () => {
   let currentData = [];
   try {
     currentData = filteredAuctions.map(mapAuctionToCardData);
-    console.log('Mapped data:', currentData);
   } catch (error) {
     console.error('Error mapping data:', error);
     return (

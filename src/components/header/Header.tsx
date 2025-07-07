@@ -1,6 +1,7 @@
-import React from 'react';
-import { Search, Bell, MessageCircle } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, Bell, MessageCircle, User, Settings, BarChart3, LogOut } from 'lucide-react';
 import { HiPlus } from 'react-icons/hi';
+import { useRouter } from 'next/router';
 
 interface HeaderProps {
   onNewAuction?: () => void;
@@ -8,6 +9,10 @@ interface HeaderProps {
   onMessageClick?: () => void;
   onLogin?: () => void;
   onRegister?: () => void;
+  onProfile?: () => void;
+  onDashboard?: () => void;
+  onSettings?: () => void;
+  onLogout?: () => void;
   userAvatar?: string;
   userName?: string;
   isLoggedIn?: boolean;
@@ -19,10 +24,45 @@ const Header: React.FC<HeaderProps> = ({
   onMessageClick,
   onLogin,
   onRegister,
+  onProfile,
+  onDashboard,
+  onSettings,
+  onLogout,
   userAvatar = "/assets/images/profile/profile.png",
   userName = "User",
   isLoggedIn = false
 }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  // Cerrar dropdown cuando se hace clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleAvatarClick = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const handleMenuItemClick = (callback?: () => void, route?: string) => {
+    setIsDropdownOpen(false);
+    if (route) {
+      router.push(route);
+    } else if (callback) {
+      callback();
+    }
+  };
+
   return (
     <header className="w-full bg-[#0e172c]">
       <div className="mx-auto px-6 py-3">
@@ -49,9 +89,6 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
           </div>
-
-
-
 
           {/* Right Section */}
           <div className="flex items-center justify-end px-4 gap-[20px]">
@@ -91,13 +128,53 @@ const Header: React.FC<HeaderProps> = ({
                   <MessageCircle size={20} fill='white' />
                 </button>
 
-                {/* User Avatar */}
-                <div className="flex items-center">
-                  <img
-                    src={userAvatar}
-                    alt={userName}
-                    className="w-10 h-10 rounded-full object-cover border-2 border-[#3A4B6C] hover:border-[#4A5B7C] transition-colors cursor-pointer"
-                  />
+                {/* User Avatar with Dropdown */}
+                <div className="relative" ref={dropdownRef}>
+                  <div className="flex items-center">
+                    <img
+                      src={userAvatar}
+                      alt={userName}
+                      className="w-10 h-10 rounded-full object-cover border-2 border-[#3A4B6C] hover:border-[#4A5B7C] transition-colors cursor-pointer"
+                      onClick={handleAvatarClick}
+                    />
+                  </div>
+
+                  {/* Dropdown Menu */}
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-[#1E2A3F] border border-[#3A4B6C] rounded-lg shadow-lg z-50">
+                      <div className="py-2">
+                        <button
+                          onClick={() => handleMenuItemClick(onProfile, '/profile')}
+                          className="w-full flex items-center px-4 py-2 text-sm text-white hover:bg-[#2A3B6F] transition-colors"
+                        >
+                          <User size={16} className="mr-3" />
+                          My Profile
+                        </button>
+                        <button
+                          onClick={() => handleMenuItemClick(onDashboard)}
+                          className="w-full flex items-center px-4 py-2 text-sm text-white hover:bg-[#2A3B6F] transition-colors"
+                        >
+                          <BarChart3 size={16} className="mr-3" />
+                          Dashboard
+                        </button>
+                        <button
+                          onClick={() => handleMenuItemClick(onSettings)}
+                          className="w-full flex items-center px-4 py-2 text-sm text-white hover:bg-[#2A3B6F] transition-colors"
+                        >
+                          <Settings size={16} className="mr-3" />
+                          Settings
+                        </button>
+                        <hr className="my-2 border-[#3A4B6C]" />
+                        <button
+                          onClick={() => handleMenuItemClick(onLogout)}
+                          className="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:bg-[#2A3B6F] transition-colors"
+                        >
+                          <LogOut size={16} className="mr-3" />
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
