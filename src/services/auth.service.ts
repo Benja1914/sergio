@@ -14,19 +14,23 @@ export interface SignupRequest {
 }
 
 export interface LoginResponse {
-  accessToken: string;
-  createdAt: Date;
-  description: string;
-  deviantArt: any;
-  email: string;
-  emailStatus: string;
-  id: string;
-  status:string;
-  type:string
-  updatedAt: Date;
-  userBanner: string;
-  userImage: string;
-  username: string;
+  status: "success" | "error";
+  data: {
+    id: string;
+    username: string;
+    email: string;
+    type: "admin" | "seller" | "buyer";
+    createdAt: string;
+    updatedAt: string;
+    userImage: string | null;
+    userBanner: string | null;
+    description: string | null;
+    deviantArt: string | null;
+    x: string | null;
+    emailStatus: "pending" | "verified";
+    status: "active" | "inactive";
+    accessToken: string;
+  };
 }
 export interface SignupResponse {
   token: string;
@@ -59,26 +63,25 @@ export class AuthService {
     const url = `${API_URL}/auth/login`;
 
     try {
-      const response = await ApiUtils.post<any>(url, credentials, {
+      const response = await ApiUtils.post<LoginResponse>(url, credentials, {
         "Content-Type": "application/json",
       });
-      console.log('response', response);
+      
+      console.log('Login response:', response);
 
-      // Accede a response.data
-      const data = response.data;
-
-      if (data && data.accessToken) {
-        this.setCookie('authToken', data.accessToken);
+      // MANTENER: Guardar en cookies como antes
+      if (response.data && response.data.accessToken) {
+        this.setCookie('authToken', response.data.accessToken);
         this.setCookie('user', JSON.stringify({
-          id: data.id,
-          email: data.email,
-          username: data.username,
-          userImage: data.userImage,
-          userBanner: data.userBanner,
+          id: response.data.id,
+          email: response.data.email,
+          username: response.data.username,
+          userImage: response.data.userImage,
+          userBanner: response.data.userBanner,
         }));
       }
 
-      return data;
+      return response; // Retornar la respuesta completa
     } catch (error) {
       throw error;
     }
@@ -106,9 +109,22 @@ export class AuthService {
 
   async logout(): Promise<void> {
     try {
+      const url = `${API_URL}/auth/logout`;
+      const token = this.getToken();
+      
+      if (token) {
+        await ApiUtils.post(url, {}, {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        });
+      }
+      
       this.deleteCookie('authToken');
       this.deleteCookie('user');
     } catch (error) {
+      // Always delete cookies even if API call fails
+      this.deleteCookie('authToken');
+      this.deleteCookie('user');
       throw error;
     }
   }

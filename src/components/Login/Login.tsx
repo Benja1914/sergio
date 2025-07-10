@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/store/store';
+import { loginUser } from '@/store/auth/thunk';
 import { AuthService } from '@/services/auth.service';
 
 interface LoginComponentProps {
@@ -9,39 +12,36 @@ interface LoginComponentProps {
 const LoginComponent: React.FC<LoginComponentProps> = ({ onLoginSuccess, onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [localError, setLocalError] = useState('');
 
-  const authService = new AuthService();
+  const dispatch = useDispatch<AppDispatch>();
+  const isLoading = useSelector((state: RootState) => state.auth.isLoading);
+  const storeError = useSelector((state: RootState) => state.auth.error);
 
   const handleSubmit = async () => {
     if (!email || !password) {
-      setError('Please fill in all fields');
+      setLocalError('Please fill in all fields');
       return;
     }
 
-    setIsLoading(true);
-    setError('');
+    setLocalError('');
 
     try {
-      const response = await authService.login({ email, password });
+      await dispatch(loginUser({ email, password }));
       
-      // Notificar al componente padre sobre el login exitoso
+      // Notificar al componente padre (mantener compatibilidad)
       if (onLoginSuccess) {
-        onLoginSuccess(response.user);
+        onLoginSuccess({ email }); // You may want to adjust this to pass the correct user data
       }
       
-      // Cerrar modal
       if (onClose) {
         onClose();
       }
       
-      console.log('Login successful:', response);
+      console.log('Login successful');
     } catch (error: any) {
       console.error('Login error:', error);
-      setError(error.message || 'Login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
+      setLocalError(error || 'Login failed. Please try again.');
     }
   };
 
@@ -49,9 +49,9 @@ const LoginComponent: React.FC<LoginComponentProps> = ({ onLoginSuccess, onClose
     <div className="w-full max-w-md bg-slate-900/95 backdrop-blur-md rounded-3xl border border-slate-700/60 p-8 shadow-2xl">
       <h1 className="text-3xl font-semibold text-white text-center mb-8">Login</h1>
       
-      {error && (
+      {(localError || storeError) && (
         <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 mb-4">
-          <p className="text-red-300 text-sm text-center">{error}</p>
+          <p className="text-red-300 text-sm text-center">{localError || storeError}</p>
         </div>
       )}
       

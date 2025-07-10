@@ -1,10 +1,13 @@
 import Head from "next/head";
 import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from 'react-redux';
 import Footer from "../footer/Footer";
 import Header from "../header/Header";
 import Modal from "../Modal/Modal";
 import LoginComponent from "../Login/Login";
 import SignupComponent from "../SignUp/SignUp";
+import { AppDispatch, RootState } from '@/store/store';
+import { initializeAuthFromCookies, logoutUser } from '@/store/auth/thunk';
 import { AuthService } from "@/services/auth.service";
 export const metadata = {
   title: "YCH",
@@ -18,36 +21,31 @@ interface Props {
 export const MainLayout = ({ children }: Props) => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
   
-  const authService = new AuthService();
+  const dispatch = useDispatch<AppDispatch>();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
 
-  // Verificar autenticación al cargar
+  // Inicializar desde cookies al cargar
   useEffect(() => {
-    const token = authService.getToken();
-    const userData = authService.getUser();
-    
-    if (token && userData) {
-      setIsLoggedIn(true);
-      setUser(userData);
-    }
-  }, []);
+    dispatch(initializeAuthFromCookies());
+  }, [dispatch]);
 
   const handleLogin = () => {
     setIsLoginModalOpen(true);
-  };
+  }; 
 
   const handleLoginSuccess = (userData: any) => {
-    setIsLoggedIn(true);
-    setUser(userData);
     setIsLoginModalOpen(false);
+    // El store ya se actualiza automáticamente
   };
 
-  const handleLogout = () => {
-    authService.logout();
-    setIsLoggedIn(false);
-    setUser(null);
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUser());
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const handleRegister = () => {
@@ -55,9 +53,8 @@ export const MainLayout = ({ children }: Props) => {
   };
 
   const handleSignupSuccess = (userData: any) => {
-    setIsLoggedIn(true);
-    setUser(userData);
     setIsSignupModalOpen(false);
+    // El store ya se actualiza automáticamente
   };
 
   const closeLoginModal = () => {
@@ -77,11 +74,12 @@ export const MainLayout = ({ children }: Props) => {
       </Head>
       <div className="h-screen flex flex-col justify-between items-center">
         <Header 
-          isLoggedIn={isLoggedIn}
+          isLoggedIn={isAuthenticated}
           onLogin={handleLogin}
           onRegister={handleRegister}
-          userAvatar={user?.avatar}
-          userName={user?.name}
+          onLogout={handleLogout}
+          userAvatar={user?.userImage || undefined}
+          userName={user?.username}
         />
         <main className="py-5 p-5 bg-[#030711] w-full flex-1 overflow-auto">{children}</main>
         <Footer />

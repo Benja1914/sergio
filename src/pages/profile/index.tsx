@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Heart } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 
 const ProfileContent = () => {
   const [message, setMessage] = useState('');
+  const profile = useSelector((state: RootState) => state.profile);
+
+  useEffect(() => {
+    console.log('Profile data:', profile);
+  }, [])
+  
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -132,7 +140,7 @@ const ProfileContent = () => {
                 </div>
               </div>
 
-              <div className="flex gap-12 justify-between">
+              <div className="flex gap-12 justify-around">
                 {/* Left Side Desktop */}
                 <div className="flex-1 max-w-2xl">
                   <div className="mb-12">
