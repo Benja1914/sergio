@@ -1,21 +1,22 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ProfileApiResponse } from "./interfaces";
 import { ProfileService } from "@/services/profile.service";
+import { getProfile, setError, startLoading, stopLoading } from "./profileSlice"; // Asegúrate de importar la acción
 
-export const fetchUserProfile = createAsyncThunk<
-  ProfileApiResponse,
-  string,
-  { rejectValue: string }
->(
-  "profile/fetchUserProfile",
-  async (userId: string, { rejectWithValue }) => {
+
+
+
+
+export const fetchUserProfile = (userId: string) => {
+  return async (dispatch: any) => {
+
     try {
+      dispatch(startLoading());
       const data = await ProfileService.getUserProfile(userId);
-      return data;
-    } catch (error) {
-      return rejectWithValue(
-        error instanceof Error ? error.message : "An unexpected error occurred"
-      );
+      dispatch(getProfile(data.data));
+      dispatch(stopLoading())
+    } catch (error: any) {
+      dispatch(setError(error.message || 'Login failed'));
     }
   }
-);
+}

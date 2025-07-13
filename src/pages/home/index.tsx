@@ -16,6 +16,11 @@ const Auctions = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 24;
 
+
+  useEffect(() => {
+    console.log('Auctions data:', auctions);
+  }, [auctions])
+  
   // Debug: Log para ver qué estamos obteniendo
 
   // Resetear página cuando cambien filtros o búsqueda

@@ -15,8 +15,9 @@ export interface ProfileData {
   description: string | null;
   deviantArt: string | null;
   x: string | null;
-  emailStatus: "pending" | "verified";
-  status: "active" | "inactive";
+  emailStatus: string;
+  status: string;
+  benefits?: string[];
 }
 
 export interface ProfileResponse {

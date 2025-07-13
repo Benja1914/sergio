@@ -23,6 +23,7 @@ export const fetchAuctions = (params?: FetchAuctionsParams) => {
     try {
       const auctionService = new AuctionService();
       const auctions = await auctionService.getAuctions(params);
+      dispatch(stopLoading());
       dispatch(getAuctions(auctions));
     } catch (error: any) {
       dispatch(setError(error.message || 'Error fetching auctions'));
