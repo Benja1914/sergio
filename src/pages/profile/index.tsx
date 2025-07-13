@@ -9,10 +9,10 @@ import { fetchUserAuctions } from '@/store/auction/thunk';
 
 const ProfileContent = () => {
   const [message, setMessage] = useState('');
-  
+
   const profile = useSelector((state: RootState) => state.profile);
   const auction = useSelector((state: RootState) => state.auction);
-  
+
   const dispatch = useDispatch<AppDispatch>();
   const authService = new AuthService();
   const user = authService.getUser();
@@ -50,9 +50,9 @@ const ProfileContent = () => {
       currentBid: storeAuction.currentPrice ? parseFloat(storeAuction.currentPrice) : undefined,
       description: storeAuction.description,
       endDate: storeAuction.auctionEndDate,
-      status: storeAuction.auctionStatus === 'open' ? 'active' : 
-              storeAuction.auctionStatus === 'closed' ? 'ended' : 
-              storeAuction.auctionStatus === 'pending' ? 'upcoming' : undefined
+      status: storeAuction.auctionStatus === 'open' ? 'active' :
+        storeAuction.auctionStatus === 'closed' ? 'ended' :
+          storeAuction.auctionStatus === 'pending' ? 'upcoming' : undefined
     };
   });
 
@@ -72,9 +72,9 @@ const ProfileContent = () => {
             />
             {/* Avatar Mobile */}
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-20">
-              <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-slate-950">
+              <div className="w-[150px] h-[150px] rounded-full overflow-hidden border-4 border-white">
                 <img
-                  src={profile.profileData?.userImage || ""}
+                  src={profile.profileData?.userImage || "https://media.gq.com.mx/photos/5f6ce732bc946e88f6c96320/16:9/w_2560%2Cc_limit/goky%2520ultra%2520instinto.jpg"}
                   alt="Avatar"
                   className="w-full h-full object-cover"
                 />
@@ -110,8 +110,8 @@ const ProfileContent = () => {
               ) : auction.error ? (
                 <div className="text-center py-8">
                   <p className="text-red-400">{auction.error}</p>
-                  <button 
-                    onClick={() => user?.id && dispatch(fetchUserAuctions(user.id, { limit: 10 }))} 
+                  <button
+                    onClick={() => user?.id && dispatch(fetchUserAuctions(user.id, { limit: 10 }))}
                     className="mt-2 text-blue-400 hover:text-blue-300"
                   >
                     Try again
@@ -121,7 +121,7 @@ const ProfileContent = () => {
                 <div className="text-center py-8">
                   <p className="text-slate-400">No auctions found for this user.</p>
                   <p className="text-xs text-slate-500 mt-2">
-                    Raw auctions: {auction.auctions.length} | 
+                    Raw auctions: {auction.auctions.length} |
                     Converted: {convertedAuctions.length}
                   </p>
                 </div>
@@ -184,7 +184,7 @@ const ProfileContent = () => {
                 className="w-full h-full object-cover"
               />
               <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-20">
-                <div className="w-[182px] h-[182px] rounded-full overflow-hidden border-4 border-slate-950">
+                <div className="w-[182px] h-[182px] rounded-full overflow-hidden border-4 border-white">
                   <img
                     src={profile.profileData?.userImage || "https://media.gq.com.mx/photos/5f6ce732bc946e88f6c96320/16:9/w_2560%2Cc_limit/goky%2520ultra%2520instinto.jpg"}
                     alt="Avatar"
@@ -221,7 +221,7 @@ const ProfileContent = () => {
                     ) : auction.error ? (
                       <div className="text-center py-8 w-full">
                         <p className="text-red-400">{auction.error}</p>
-                        <button 
+                        <button
                           onClick={() => user?.id && dispatch(fetchUserAuctions(user.id, { limit: 10 }))}
                           className="mt-2 text-blue-400 hover:text-blue-300"
                         >
@@ -232,7 +232,7 @@ const ProfileContent = () => {
                       <div className="text-center py-8 w-full">
                         <p className="text-slate-400">No auctions found for this user.</p>
                         <p className="text-xs text-slate-500 mt-2">
-                          Raw auctions: {auction.auctions.length} | 
+                          Raw auctions: {auction.auctions.length} |
                           Converted: {convertedAuctions.length}
                         </p>
                       </div>
@@ -279,7 +279,7 @@ const ProfileContent = () => {
                           <span className="text-xs text-slate-400">{profile.profileData?.createdAt ? new Date(profile.profileData.createdAt).toLocaleDateString() : ""}</span>
                         </div>
                         <p className="text-sm text-slate-300 mb-4 leading-relaxed">{profile.profileData?.description || "No description provided."}</p>
-     
+
                       </div>
                     </div>
                   </div>
