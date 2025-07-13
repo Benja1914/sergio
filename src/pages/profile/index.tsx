@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, fetchUserProfile, RootState } from '@/store';
 import { AuthService } from '@/services/auth.service';
 import renderBenefitChips from '@/components/Chips/Chips';
+import AuctionsComponent, { Auction } from '@/components/AuctionComponent/AuctionComponent';
+import { fetchUserAuctions } from '@/store/auction/thunk';
 
 const ProfileContent = () => {
   const [message, setMessage] = useState('');
+  
   const profile = useSelector((state: RootState) => state.profile);
-  const profileData = profile.profileData;
+  const auction = useSelector((state: RootState) => state.auction);
+  
   const dispatch = useDispatch<AppDispatch>();
   const authService = new AuthService();
   const user = authService.getUser();
@@ -21,6 +25,39 @@ const ProfileContent = () => {
     console.log('profile data:', profile);
   }, [profile]);
 
+
+  // Cargar auctions del usuario usando Redux
+  useEffect(() => {
+    if (user?.id) {
+      console.log('Fetching auctions for user:', user.id);
+      dispatch(fetchUserAuctions(user.id, {
+        limit: 10,
+        status: 'open'
+      }));
+    }
+  }, [user?.id, dispatch]);
+
+  // Convertir auctions del store a la interfaz del componente
+  // Usar auction.auctions si no implementaste userAuctions en el slice
+  const convertedAuctions: Auction[] = auction.userAuctions.map((storeAuction) => {
+    console.log('Converting auction:', storeAuction);
+    return {
+      id: storeAuction.id,
+      title: storeAuction.title,
+      images: [storeAuction.attachedImage || 'https://via.placeholder.com/400x300?text=No+Image'],
+      startingBid: parseFloat(storeAuction.startingBidPrice) || 0,
+      minimumBid: parseFloat(storeAuction.minimumBidIncrement) || 5,
+      currentBid: storeAuction.currentPrice ? parseFloat(storeAuction.currentPrice) : undefined,
+      description: storeAuction.description,
+      endDate: storeAuction.auctionEndDate,
+      status: storeAuction.auctionStatus === 'open' ? 'active' : 
+              storeAuction.auctionStatus === 'closed' ? 'ended' : 
+              storeAuction.auctionStatus === 'pending' ? 'upcoming' : undefined
+    };
+  });
+
+  console.log('Converted auctions:', convertedAuctions);
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       {/* Mobile Layout */}
@@ -29,7 +66,7 @@ const ProfileContent = () => {
           {/* Hero Banner Mobile */}
           <div className="h-64 bg-gradient-to-r from-orange-400 via-yellow-400 to-orange-500 relative">
             <img
-              src={profileData?.userBanner || ""}
+              src={profile.profileData?.userBanner || ""}
               alt="Banner"
               className="w-full h-full object-cover"
             />
@@ -37,7 +74,7 @@ const ProfileContent = () => {
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-20">
               <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-slate-950">
                 <img
-                  src={profileData?.userImage || ""}
+                  src={profile.profileData?.userImage || ""}
                   alt="Avatar"
                   className="w-full h-full object-cover"
                 />
@@ -49,9 +86,9 @@ const ProfileContent = () => {
           <div className="px-4 pt-16 pb-8">
             {/* Profile Info Mobile */}
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold mb-3">{profileData?.username || "unknow"}</h1>
+              <h1 className="text-3xl font-bold mb-3">{profile.profileData?.username || "unknow"}</h1>
               <div className="flex gap-2 justify-center flex-wrap">
-                {renderBenefitChips(profileData?.benefits)}
+                {renderBenefitChips(profile.profileData?.benefits)}
               </div>
             </div>
 
@@ -59,36 +96,38 @@ const ProfileContent = () => {
             <div className="mb-8">
               <h2 className="text-xl font-semibold mb-4 text-left">About Me</h2>
               <p className="text-slate-300 leading-relaxed text-left">
-                {profileData?.description || ""}
+                {profile.profileData?.description || ""}
               </p>
             </div>
 
             {/* Auctions Mobile */}
             <div className="mb-8">
               <h2 className="text-xl font-semibold mb-4">Auctions</h2>
-              <div className="relative bg-slate-900 rounded-xl p-4 border border-slate-800">
-                <div className="relative">
-                  <img src="https://pbs.twimg.com/tweet_video_thumb/DK5MokkXoAYAPkx.jpg" alt="Auction Art" className="w-full h-80 object-cover rounded-lg mb-4" />
-                  <button className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-slate-800/80 rounded-full p-2">
-                    <ChevronLeft className="w-4 h-4" />
+              {auction.isLoading ? (
+                <div className="text-center py-8">
+                  <p className="text-slate-400">Loading auctions...</p>
+                </div>
+              ) : auction.error ? (
+                <div className="text-center py-8">
+                  <p className="text-red-400">{auction.error}</p>
+                  <button 
+                    onClick={() => user?.id && dispatch(fetchUserAuctions(user.id, { limit: 10 }))} 
+                    className="mt-2 text-blue-400 hover:text-blue-300"
+                  >
+                    Try again
                   </button>
-                  <button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-slate-800/80 rounded-full p-2">
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
                 </div>
-                <h3 className="font-semibold mb-2">Example Title Auction example YCH</h3>
-                <div className="text-sm text-slate-400 space-y-1">
-                  <p><span className="font-medium">SB:</span> $180</p>
-                  <p><span className="font-medium">MB:</span> $20</p>
+              ) : convertedAuctions.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-slate-400">No auctions found for this user.</p>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Raw auctions: {auction.auctions.length} | 
+                    Converted: {convertedAuctions.length}
+                  </p>
                 </div>
-                <div className="flex justify-center mt-4">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5, 6].map(i => (
-                      <div key={i} className={`w-2 h-2 rounded-full ${i === 1 ? 'bg-white' : 'bg-slate-600'}`}></div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              ) : (
+                <AuctionsComponent auctions={convertedAuctions} />
+              )}
             </div>
 
             {/* Chat Section Mobile */}
@@ -107,17 +146,17 @@ const ProfileContent = () => {
                 <div className="flex gap-3">
                   <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                     <img
-                      src={profileData?.userImage || ""}
+                      src={profile.profileData?.userImage || ""}
                       alt="User Avatar"
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium">{profileData?.username || "Username"}</span>
-                      <span className="text-xs text-slate-400">{profileData?.createdAt ? new Date(profileData.createdAt).toLocaleDateString() : ""}</span>
+                      <span className="text-sm font-medium">{profile.profileData?.username || "Username"}</span>
+                      <span className="text-xs text-slate-400">{profile.profileData?.createdAt ? new Date(profile.profileData.createdAt).toLocaleDateString() : ""}</span>
                     </div>
-                    <p className="text-sm text-slate-300 mb-3">{profileData?.description || "No description provided."}</p>
+                    <p className="text-sm text-slate-300 mb-3">{profile.profileData?.description || "No description provided."}</p>
                     <div className="relative">
                       <img src="https://cdn.hobbyconsolas.com/sites/navi.axelspringer.es/public/media/image/2020/04/muerte-krilin-manos-freezer-1921217.jpg?tf=1200x900" alt="Art Post" className="h-[578px] w-[462px] object-cover rounded-lg" />
                       <div className="absolute bottom-2 left-2 flex items-center gap-1 text-white text-sm">
@@ -140,14 +179,14 @@ const ProfileContent = () => {
           <div className="flex-1 relative">
             <div className="h-64 bg-gradient-to-r from-orange-400 via-yellow-400 to-orange-500 relative">
               <img
-                src={profileData?.userBanner || ''}
+                src={profile.profileData?.userBanner || ''}
                 alt="Banner"
                 className="w-full h-full object-cover"
               />
               <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-20">
                 <div className="w-[182px] h-[182px] rounded-full overflow-hidden border-4 border-slate-950">
                   <img
-                    src={profileData?.userImage || "https://media.gq.com.mx/photos/5f6ce732bc946e88f6c96320/16:9/w_2560%2Cc_limit/goky%2520ultra%2520instinto.jpg"}
+                    src={profile.profileData?.userImage || "https://media.gq.com.mx/photos/5f6ce732bc946e88f6c96320/16:9/w_2560%2Cc_limit/goky%2520ultra%2520instinto.jpg"}
                     alt="Avatar"
                     className="w-full h-full object-cover"
                   />
@@ -157,9 +196,9 @@ const ProfileContent = () => {
 
             <div className="px-8 pt-24 pb-8">
               <div className="text-center mb-12">
-                <h1 className="text-4xl font-bold mb-4">{profileData?.username || "unknow"}</h1>
+                <h1 className="text-4xl font-bold mb-4">{profile.profileData?.username || "unknow"}</h1>
                 <div className="flex gap-3 justify-center">
-                  {renderBenefitChips(profileData?.benefits)}
+                  {renderBenefitChips(profile.profileData?.benefits)}
                 </div>
               </div>
 
@@ -169,37 +208,39 @@ const ProfileContent = () => {
                   <div className="mb-12">
                     <h2 className="text-2xl font-semibold mb-6 text-left">About Me</h2>
                     <p className="text-slate-300 leading-relaxed text-left text-base">
-                      {profileData?.description || ""}
+                      {profile.profileData?.description || ""}
                     </p>
                   </div>
 
                   <div className='flex justify-center flex-col align-middle items-center'>
                     <h2 className="text-2xl font-semibold mb-6 self-start">Auctions</h2>
-                    <div className="relative bg-slate-900 rounded-xl p-6 border border-slate-800">
-                      <div className="relative">
-                        <img src="https://pbs.twimg.com/tweet_video_thumb/DK5MokkXoAYAPkx.jpg" alt="Auction Art" className="w-full h-96 object-cover rounded-lg mb-4" />
-                        <button className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-slate-800/80 rounded-full p-2">
-                          <ChevronLeft className="w-5 h-5" />
+                    {auction.isLoading ? (
+                      <div className="text-center py-8 w-full">
+                        <p className="text-slate-400">Loading auctions...</p>
+                      </div>
+                    ) : auction.error ? (
+                      <div className="text-center py-8 w-full">
+                        <p className="text-red-400">{auction.error}</p>
+                        <button 
+                          onClick={() => user?.id && dispatch(fetchUserAuctions(user.id, { limit: 10 }))}
+                          className="mt-2 text-blue-400 hover:text-blue-300"
+                        >
+                          Try again
                         </button>
-                        <button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-slate-800/80 rounded-full p-2">
-                          <ChevronRight className="w-5 h-5" />
-                        </button>
                       </div>
-                      <h3 className="font-semibold mb-2">Example Title Auction example YCH</h3>
-                      <div className="text-sm text-slate-400 space-y-1">
-                        <p><span className="font-medium">SB:</span> $180</p>
-                        <p><span className="font-medium">MB:</span> $20</p>
+                    ) : convertedAuctions.length === 0 ? (
+                      <div className="text-center py-8 w-full">
+                        <p className="text-slate-400">No auctions found for this user.</p>
+                        <p className="text-xs text-slate-500 mt-2">
+                          Raw auctions: {auction.auctions.length} | 
+                          Converted: {convertedAuctions.length}
+                        </p>
                       </div>
-                      <div className="flex justify-center mt-4">
-                        <div className="flex gap-1">
-                          {[1, 2, 3, 4, 5, 6].map(i => (
-                            <div key={i} className={`w-2 h-2 rounded-full ${i === 1 ? 'bg-white' : 'bg-slate-600'}`}></div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                    ) : (
+                      <AuctionsComponent auctions={convertedAuctions} className="w-full" />
+                    )}
 
-                    <div className="mt-12 text-xs text-slate-500 space-y-2">
+                    <div className="mt-12 text-xs text-slate-500 mr-auto">
                       <div className="flex gap-6">
                         <span>Terms of use</span>
                         <span>Privacy Policy</span>
@@ -227,24 +268,18 @@ const ProfileContent = () => {
                     <div className="flex gap-4">
                       <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
                         <img
-                          src={profileData?.userImage || ""}
+                          src={profile.profileData?.userImage || ""}
                           alt="User Avatar"
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <span className="text-sm font-medium text-white">{profileData?.username || "Username"}</span>
-                          <span className="text-xs text-slate-400">{profileData?.createdAt ? new Date(profileData.createdAt).toLocaleDateString() : ""}</span>
+                          <span className="text-sm font-medium text-white">{profile.profileData?.username || "Username"}</span>
+                          <span className="text-xs text-slate-400">{profile.profileData?.createdAt ? new Date(profile.profileData.createdAt).toLocaleDateString() : ""}</span>
                         </div>
-                        <p className="text-sm text-slate-300 mb-4 leading-relaxed">{profileData?.description || "No description provided."}</p>
-                        <div className="flex justify-center">
-                          <img src="https://cdn.hobbyconsolas.com/sites/navi.axelspringer.es/public/media/image/2020/04/muerte-krilin-manos-freezer-1921217.jpg?tf=1200x900" alt="Art Post" className="h-[578px] w-[462px] object-cover rounded-lg" />
-                          <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-black/50 rounded-full px-3 py-1">
-                            <Heart className="w-4 h-4 text-red-400" />
-                            <span className="text-white text-sm">12</span>
-                          </div>
-                        </div>
+                        <p className="text-sm text-slate-300 mb-4 leading-relaxed">{profile.profileData?.description || "No description provided."}</p>
+     
                       </div>
                     </div>
                   </div>
