@@ -62,7 +62,7 @@ const Card: React.FC<CardProps> = ({
                 </div>
 
                 {/* Content Container */}
-                <div className="bg-slate-800 text-white p-4 flex-1 flex flex-col mr-4">
+                <div className="bg-slate-800 text-white p-4 flex-1 flex flex-col">
                     {/* Title and Subtitle */}
                     <div className="mb-2">
                         <h3 className="text-lg font-semibold text-white mb-1 truncate leading-none">

@@ -2,12 +2,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import { auctionSlice } from "./auction/auctionSlice";
 import authSlice from "./auth/authSlice";
 import profileSlice from "./profile/profileSlice";
+import publicationsSlice from "./publications/publicationsSlice";
 
 export const store = configureStore({
   reducer: {
     auction: auctionSlice.reducer,
     auth: authSlice,
     profile: profileSlice,
+    publications: publicationsSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
