@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, MessageCircle, Share, MoreHorizontal } from 'lucide-react';
+import { Heart, MessageCircle, Share, MoreHorizontal, Image, Send } from 'lucide-react';
 import { Publication } from '@/services/publications.service';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchUserPublications, createNewPublication, likePublication as likePublicationThunk, unlikePublication as unlikePublicationThunk } from '@/store/publications/thunk';
@@ -12,6 +12,7 @@ const ChatSection: React.FC<ChatSectionProps> = ({
   className = '' 
 }) => {
   const [message, setMessage] = useState('');
+  const [newPostContent, setNewPostContent] = useState('');
   const [posts, setPosts] = useState<Post[]>([]);
   
   const dispatch = useAppDispatch();
@@ -70,6 +71,35 @@ const ChatSection: React.FC<ChatSectionProps> = ({
     }
   };
 
+  const handleSendNewPost = async () => {
+    if (newPostContent.trim() && userId) {
+      try {
+        const response = await fetch('http://localhost:3001/api/v1/publications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`,
+          },
+          body: JSON.stringify({
+            publication_user_id: userId,
+            content: newPostContent.trim(),
+            attachedFileUrl: "https://i.redd.it/zmmj7uzsi99d1.jpeg"
+          })
+        });
+        
+        if (response.ok) {
+          setNewPostContent('');
+          // Refresh publications after successful post
+          dispatch(fetchUserPublications(userId));
+        } else {
+          console.error('Failed to create publication:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error creating publication:', error);
+      }
+    }
+  };
+
   const handleLike = async (postId: string) => {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
@@ -97,37 +127,31 @@ const ChatSection: React.FC<ChatSectionProps> = ({
   return (
     <div className={`w-full max-w-md ${className}`}>
       {/* Header */}
+      
+      {/* New Post Input */}
       <div className="mb-6">
-        <p className="text-slate-400 text-lg font-medium">Tell us something...</p>
-      </div>
-
-      {/* Message Input */}
-      <div className="flex gap-3 mb-8">
-        <div className="flex-1 relative">
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Write a message..."
-            className="w-full bg-slate-800 rounded-lg px-4 py-3 text-sm border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400 pr-12"
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-          />
-          <button
-            onClick={handleSendMessage}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 text-slate-400 hover:text-white transition-colors"
+        <div className="flex items-center gap-3">
+          <button className="text-slate-400 hover:text-white transition-colors">
+            <Image className="w-5 h-5" />
+          </button>
+          <div className="flex-1">
+            <input
+              type="text"
+              value={newPostContent}
+              onChange={(e) => setNewPostContent(e.target.value)}
+              placeholder="What's on your mind?"
+              className="w-full bg-transparent text-white placeholder-slate-400 border-0 border-b border-slate-600 focus:border-blue-400 focus:outline-none pb-2 text-sm"
+            />
+          </div>
+          <button 
+            onClick={handleSendNewPost}
+            className="text-slate-400 hover:text-blue-400 transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
+            <Send className="w-5 h-5" />
           </button>
         </div>
-        <button 
-          onClick={handleSendMessage}
-          className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg text-sm font-medium transition-colors text-white"
-        >
-          Send
-        </button>
       </div>
+      
 
       {/* Posts Feed */}
       <div className="space-y-6">
