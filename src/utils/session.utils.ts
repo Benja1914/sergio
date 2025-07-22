@@ -33,7 +33,7 @@ export const getRutCookieSession = () => {
 };
 
 export const getToken = () => {
-  const tokenJWT = (Cookies.get("token") as string) ?? null;
+  const tokenJWT = (Cookies.get("authToken") as string) ?? null;
   return tokenJWT;
 };
 

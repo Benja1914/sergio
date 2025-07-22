@@ -1,13 +1,13 @@
-import { PublicationsService, CreatePublicationRequest } from "@/services/publications.service";
+import { PublicationsService } from "@/services/publications.service";
 import { AppDispatch } from "../store";
 import { 
   startLoading, 
   setError, 
   setUserPublications, 
   setAllPublications, 
-  addPublication, 
-  updatePublication 
+  addPublication
 } from "./publicationsSlice";
+import { CreatePublicationRequest } from "@/interfaces/puiblications";
 
 const publicationsService = new PublicationsService();
 
@@ -35,12 +35,12 @@ export const fetchAllPublications = (page?: number, limit?: number) => {
   };
 };
 
-export const createNewPublication = (publicationData: CreatePublicationRequest, userId: string) => {
+export const createNewPublication = (publicationData: CreatePublicationRequest) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoading());
     try {
       const newPublication = await publicationsService.createPublication(publicationData);
-      dispatch(addPublication({ userId, publication: newPublication }));
+      dispatch(addPublication(publicationData));
     } catch (error: any) {
       dispatch(setError(error.message || 'Failed to create publication'));
     }

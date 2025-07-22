@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { PublicationsState, Publication } from "./interfaces";
+import { CreatePublicationRequest } from "@/interfaces/puiblications";
 
 const initialState: PublicationsState = {
   publications: [],
@@ -35,29 +36,8 @@ export const publicationsSlice = createSlice({
       state.isLoading = false;
       state.error = null;
     },
-    addPublication: (state, action: PayloadAction<{userId: string; publication: Publication}>) => {
-      const { userId, publication } = action.payload;
-      if (state.userPublications[userId]) {
-        state.userPublications[userId].unshift(publication);
-      }
-      state.publications.unshift(publication);
-    },
-    updatePublication: (state, action: PayloadAction<Publication>) => {
-      const updatedPublication = action.payload;
-      
-      // Update in publications array
-      const publicationIndex = state.publications.findIndex(p => p.id === updatedPublication.id);
-      if (publicationIndex !== -1) {
-        state.publications[publicationIndex] = updatedPublication;
-      }
-      
-      // Update in userPublications
-      Object.keys(state.userPublications).forEach(userId => {
-        const userPublicationIndex = state.userPublications[userId].findIndex(p => p.id === updatedPublication.id);
-        if (userPublicationIndex !== -1) {
-          state.userPublications[userId][userPublicationIndex] = updatedPublication;
-        }
-      });
+    addPublication: (state, action: PayloadAction<CreatePublicationRequest>) => {
+      state.publications.unshift(action.payload);
     },
   },
 });
@@ -70,7 +50,6 @@ export const {
   setUserPublications,
   setAllPublications,
   addPublication,
-  updatePublication,
 } = publicationsSlice.actions;
 
 export default publicationsSlice.reducer;

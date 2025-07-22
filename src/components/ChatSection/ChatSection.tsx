@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Share, MoreHorizontal, Image, Send } from 'lucide-react';
-import { Publication } from '@/services/publications.service';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchUserPublications, createNewPublication, likePublication as likePublicationThunk, unlikePublication as unlikePublicationThunk } from '@/store/publications/thunk';
 import { ChatSectionProps, Post } from './interfaces';
+import { Publication } from '@/interfaces/puiblications';
 
 const ChatSection: React.FC<ChatSectionProps> = ({ 
   userImage, 
@@ -64,39 +64,12 @@ const ChatSection: React.FC<ChatSectionProps> = ({
   const handleSendMessage = async () => {
     if (message.trim() && userId) {
       await dispatch(createNewPublication({
-        content: message.trim()
-      }, userId));
+        content: message.trim(),
+        attachedImage: "https://i.redd.it/zmmj7uzsi99d1.jpeg",
+        publication_user_id: userId
+      }));
       
       setMessage('');
-    }
-  };
-
-  const handleSendNewPost = async () => {
-    if (newPostContent.trim() && userId) {
-      try {
-        const response = await fetch('http://localhost:3001/api/v1/publications', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`,
-          },
-          body: JSON.stringify({
-            publication_user_id: userId,
-            content: newPostContent.trim(),
-            attachedFileUrl: "https://i.redd.it/zmmj7uzsi99d1.jpeg"
-          })
-        });
-        
-        if (response.ok) {
-          setNewPostContent('');
-          // Refresh publications after successful post
-          dispatch(fetchUserPublications(userId));
-        } else {
-          console.error('Failed to create publication:', response.statusText);
-        }
-      } catch (error) {
-        console.error('Error creating publication:', error);
-      }
     }
   };
 
@@ -130,26 +103,24 @@ const ChatSection: React.FC<ChatSectionProps> = ({
       
       {/* New Post Input */}
       <div className="mb-6">
-        <div className="flex items-center gap-3">
-          <button className="text-slate-400 hover:text-white transition-colors">
+       <div className='w-full bg-slate-900/50 rounded-xl p-4 border border-slate-800 mb-6 flex flex-col gap-2'>
+        <input
+          type="text"
+          placeholder='Tell us something...'
+          className="bg-transparent border-slate-800 border-0 border-b outline-none focus:outline-none ring-0 focus:ring-0 focus:ring-offset-0"
+          value={message}
+          onChange={e => setMessage(e.target.value)}
+        />
+        <div className='flex justify-between mt-2'>
             <Image className="w-5 h-5" />
-          </button>
-          <div className="flex-1">
-            <input
-              type="text"
-              value={newPostContent}
-              onChange={(e) => setNewPostContent(e.target.value)}
-              placeholder="What's on your mind?"
-              className="w-full bg-transparent text-white placeholder-slate-400 border-0 border-b border-slate-600 focus:border-blue-400 focus:outline-none pb-2 text-sm"
-            />
-          </div>
-          <button 
-            onClick={handleSendNewPost}
-            className="text-slate-400 hover:text-blue-400 transition-colors"
+          <span
+            className="cursor-pointer flex justify-center items-center w-28 h-10 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-medium transition-colors"
+            onClick={() => handleSendMessage()}
           >
-            <Send className="w-5 h-5" />
-          </button>
+            Send
+          </span>
         </div>
+      </div>
       </div>
       
 
